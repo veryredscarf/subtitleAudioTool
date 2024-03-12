@@ -1,0 +1,66 @@
+{
+  "name": "my-new-app",
+  "productName": "my-new-app",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": ".vite/build/main.js",
+  "scripts": {
+    "start": "chcp 65001 && electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.3.0",
+    "@electron-forge/maker-deb": "^7.3.0",
+    "@electron-forge/maker-rpm": "^7.3.0",
+    "@electron-forge/maker-squirrel": "^7.3.0",
+    "@electron-forge/maker-zip": "^7.3.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.0",
+    "@electron-forge/plugin-fuses": "^7.3.0",
+    "@electron-forge/plugin-vite": "^7.3.0",
+    "@electron/fuses": "^1.7.0",
+    "electron": "29.1.1",
+    "vite": "^5.1.6",
+    "vite-plugin-node-polyfills": "^0.21.0"
+  },
+  "keywords": [],
+  "author": {
+    "name": "刘延伟",
+    "email": "2791908122@qq.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "electron-squirrel-startup": "^1.0.0",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  },
+  "config": {
+    "forge": {
+      "plugins": [
+        {
+          "name": "@electron-forge/plugin-vite",
+          "config": {
+            "build": [
+              {
+                "entry": "src/main.js",
+                "config": "vite.main.config.mjs"
+              },
+              {
+                "entry": "src/preload.js",
+                "config": "vite.preload.config.mjs"
+              }
+            ],
+            "renderer": [
+              {
+                "name": "main_window",
+                "config": "vite.renderer.config.mjs"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
