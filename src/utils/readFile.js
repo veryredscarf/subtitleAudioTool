@@ -2,7 +2,7 @@ import  fs from 'fs'
 import  path from 'path'
 let dircList= []
 let readPromise = (folderPath) => {
-    console.log(folderPath, 'folderPathfolderPath');
+  console.log(folderPath, 'folderPathfolderPath');
   return new Promise((resolve, reject) => {
     if (!folderPath) {
       return false
@@ -12,7 +12,6 @@ let readPromise = (folderPath) => {
       if (!fs.lstatSync(filePath).isFile()) {
         dircList.push(fileName)
       }
-      console.log(dircList, 'dircList');
     })
     resolve(dircList)
   })

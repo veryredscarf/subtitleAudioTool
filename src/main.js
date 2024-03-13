@@ -1,8 +1,9 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 import  readPromise  from '../src/utils/readFile'
-
-
+let normalPath = 'C:/Users/Administrator/AppData/Local/jianYingPro/Projects'
+let res = []
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -27,7 +28,45 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-  readPromise('C:/Users/27919/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft')
+  // readPromise('C:/Users/27919/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft')
+  const menu = Menu.buildFromTemplate([
+    {
+      label: '点我查询数据',
+      submenu: [
+        {
+          click: () => mainWindow.webContents.send('update-counter', res),
+          label: 'Increment'
+        },
+        // {
+        //   click: () => mainWindow.webContents.send('update-counter', -1),
+        //   label: 'Decrement'
+        // }
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
+  async function handleFileOpen (event, title) {
+    console.log(title, 'title');
+    const webContents = event.sender
+    const win = BrowserWindow.fromWebContents(webContents)
+    // win.setTitle(title)
+    let fullAddress = normalPath + '/' +title
+    console.log(fullAddress, 'fullAddressfullAddress');
+    const items = fs.readdirSync(fullAddress)
+    console.log(items, 'itemsitems');
+    // 读取工程文件
+    let currentFile = fullAddress + '/draft_meta_info.json'
+    const currentFileItems = JSON.parse(fs.readFileSync(currentFile, 'utf8'))
+    console.log(currentFileItems, 'currentFileItems');
+  }
+
+ readPromise(normalPath).then(value => {
+    // mainWindow.webContents.send('update-counter', value)
+    res = value
+  })
+
+  ipcMain.on('chooseFile', handleFileOpen)
+
 };
 
 // This method will be called when Electron has finished
