@@ -135,12 +135,14 @@ let readPromise = (folderPath) => {
         dircList.push(fileName);
       }
     });
-    console.log(dircList, "dircList");
     resolve(dircList);
   });
 };
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain } = require("electron");
 const path = require("path");
+const fs = require("fs");
+let normalPath = "C:/Users/27919/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft";
+let res = [];
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
@@ -156,7 +158,51 @@ const createWindow = () => {
     mainWindow.loadURL("http://localhost:8099");
   }
   mainWindow.webContents.openDevTools();
-  readPromise("C:/Users/27919/AppData/Local/JianyingPro/User Data/Projects/com.lveditor.draft");
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "点我查询数据",
+      submenu: [
+        {
+          click: () => mainWindow.webContents.send("update-counter", res),
+          label: "Increment"
+        }
+        // {
+        //   click: () => mainWindow.webContents.send('update-counter', -1),
+        //   label: 'Decrement'
+        // }
+      ]
+    }
+  ]);
+  Menu.setApplicationMenu(menu);
+  async function handleFileOpen(event, title) {
+    console.log(title, "title");
+    const webContents = event.sender;
+    BrowserWindow.fromWebContents(webContents);
+    let fullAddress = normalPath + "/" + title;
+    console.log(fullAddress, "fullAddressfullAddress");
+    const items = fs.readdirSync(fullAddress);
+    console.log(items, "itemsitems");
+    let currentFile = fullAddress + "/draft_content.json";
+    const currentFileItems = JSON.parse(fs.readFileSync(currentFile, "utf8"));
+    const { materials, tracks } = currentFileItems;
+    console.log(tracks);
+    const { texts } = materials;
+    texts.map((item) => {
+    });
+    let textInfoList = tracks.filter((item) => item.type == "text");
+    let audioInfoList = tracks.filter((item) => item.type == "audio");
+    console.log(textInfoList, "textInfoList");
+    let textInfoObj = textInfoList[0];
+    const { segments } = textInfoObj;
+    segments.map((item) => {
+    });
+    audioInfoList.map((item) => {
+    });
+  }
+  readPromise(normalPath).then((value) => {
+    res = value;
+  });
+  ipcMain.on("chooseFile", handleFileOpen);
 };
 app.on("ready", createWindow);
 app.on("window-all-closed", () => {

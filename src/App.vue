@@ -35,6 +35,7 @@ const itemClick = (item) => {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  flex-wrap: wrap;
   
 }
 
