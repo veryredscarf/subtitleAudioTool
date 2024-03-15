@@ -175,29 +175,31 @@ const createWindow = () => {
   ]);
   Menu.setApplicationMenu(menu);
   async function handleFileOpen(event, title) {
-    console.log(title, "title");
     const webContents = event.sender;
     BrowserWindow.fromWebContents(webContents);
     let fullAddress = normalPath + "/" + title;
-    console.log(fullAddress, "fullAddressfullAddress");
-    const items = fs.readdirSync(fullAddress);
-    console.log(items, "itemsitems");
+    fs.readdirSync(fullAddress);
     let currentFile = fullAddress + "/draft_content.json";
     const currentFileItems = JSON.parse(fs.readFileSync(currentFile, "utf8"));
+    let audioFirstStart = 0;
+    let normalSpace = 2e4;
     const { materials, tracks } = currentFileItems;
-    console.log(tracks);
-    const { texts } = materials;
-    texts.map((item) => {
-    });
     let textInfoList = tracks.filter((item) => item.type == "text");
-    let audioInfoList = tracks.filter((item) => item.type == "audio");
-    console.log(textInfoList, "textInfoList");
     let textInfoObj = textInfoList[0];
     const { segments } = textInfoObj;
-    segments.map((item) => {
+    let audioInfoList = tracks.filter((item) => item.type == "audio");
+    audioInfoList.map((item, index) => {
+      console.log(item, "itemmmmmmmmmm");
+      const { material_id, target_timerange } = item.segments[0];
+      const { duration } = target_timerange;
+      segments[index].target_timerange.start = audioFirstStart;
+      segments[index].target_timerange.duration = duration;
+      item.segments[0].target_timerange.start = audioFirstStart;
+      audioFirstStart = normalSpace + duration;
     });
-    audioInfoList.map((item) => {
-    });
+    console.log(segments, "segmentssegments");
+    let data = JSON.stringify(currentFileItems);
+    fs.writeFileSync(currentFile, data, "utf-8");
   }
   readPromise(normalPath).then((value) => {
     res = value;

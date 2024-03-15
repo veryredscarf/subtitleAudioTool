@@ -47,38 +47,61 @@ const createWindow = () => {
   ])
   Menu.setApplicationMenu(menu)
   async function handleFileOpen (event, title) {
-    console.log(title, 'title');
+    // console.log(title, 'title');
     const webContents = event.sender
     const win = BrowserWindow.fromWebContents(webContents)
     // win.setTitle(title)
     let fullAddress = normalPath + '/' + title
-    console.log(fullAddress, 'fullAddressfullAddress');
+    // console.log(fullAddress, 'fullAddressfullAddress');
     const items = fs.readdirSync(fullAddress)
-    console.log(items, 'itemsitems');
+    // console.log(items, 'itemsitems');
     // 读取工程文件
     let currentFile = fullAddress + '/draft_content.json'
     const currentFileItems = JSON.parse(fs.readFileSync(currentFile, 'utf8'))
     // console.log(currentFileItems, 'currentFileItems');
+    // 首先默认将第一个音频的起始位置设置为0
+    let audioFirstStart = 0
+    // 设置每个视频的间距
+    let normalSpace = 20000 // 默认是10帧
     const { materials, tracks } = currentFileItems
-    console.log(tracks);
-    const { texts } = materials
-    texts.map(item => {
-      const { id } = item  // 获取字幕对象的id  
-    })
-    // 获取素材文本对象list
+    // console.log(tracks);
+    const { texts, audios } = materials
+    // // 获取素材文本对象list
     let textInfoList = tracks.filter(item => item.type == 'text')  // 包含所有文本的时间，开始时间，但是只有一个对象
-    let audioInfoList = tracks.filter(item => item.type == 'audio')  // 包含所有的音频对象的信息  有多个
-    console.log(textInfoList, 'textInfoList');
     let textInfoObj = textInfoList[0]
+
     const { segments } = textInfoObj
-    // 有此处获取到字幕对象的起始位置以及时长
-    segments.map(item => {
+    // console.log(segments, 'segmentssegments');
+    // // 此处获取到字幕对象的起始位置以及时长
+    // segments.map(item => {
 
-    })
+    // })
+    // audios.map((item, index) => {
+    //   const { id, text_id, duration } = item  // 获取音频对象的id,对应的文字转语音的id，音频时长
+    //   // let textIndex =  segments.findIndex (item => item.material_id == text_id) // 找到对应音频所对应的文本对象
+    //   segments[index].target_timerange.start = audioFirstStart
+    // })
+
+    let audioInfoList = tracks.filter(item => item.type == 'audio')  // 包含所有的音频对象的信息  有多个
+    // console.log(textInfoList, 'textInfoList');
+
+
+
     // 由于我的需求是根据音频的长度来动态调整文本的长度
-    audioInfoList.map(item => {
-
+    // console.log(audioInfoList, 'audioInfoListaudioInfoList');
+    audioInfoList.map((item, index) => {
+      console.log(item, 'itemmmmmmmmmm');
+      const { material_id, target_timerange } = item.segments[0] // 获取音频对象的id,以及对应音频的长度和起始位置
+      const { duration} = target_timerange // 获取音频的长度
+      segments[index].target_timerange.start = audioFirstStart
+      segments[index].target_timerange.duration = duration
+      item.segments[0].target_timerange.start = audioFirstStart
+      audioFirstStart = normalSpace + duration
     })
+    console.log(segments, 'segmentssegments');
+    // console.log(currentFileItems.tracks[3].segments[0], 'currentFileItems.tracks[2].segments[0]');
+    let data = JSON.stringify(currentFileItems);
+    fs.writeFileSync(currentFile, data, "utf-8");
   }
 
  readPromise(normalPath).then(value => {
