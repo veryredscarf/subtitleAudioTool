@@ -14,6 +14,9 @@
     dircList.splice(0, dircList.length)
     dircList.push(...value)
 })
+  window.electronAPI.onFinish((data) => {
+    console.log(data, 'datadata');
+})
 const itemClick = (item) => {
   window.electronAPI.chooseFile(item)
 }

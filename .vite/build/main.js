@@ -181,24 +181,38 @@ const createWindow = () => {
     fs.readdirSync(fullAddress);
     let currentFile = fullAddress + "/draft_content.json";
     const currentFileItems = JSON.parse(fs.readFileSync(currentFile, "utf8"));
+    let startData = JSON.parse(JSON.stringify(currentFileItems));
     let audioFirstStart = 0;
-    let normalSpace = 2e4;
+    let normalSpace = 2e3;
     const { materials, tracks } = currentFileItems;
+    const { texts, audios } = materials;
     let textInfoList = tracks.filter((item) => item.type == "text");
-    let textInfoObj = textInfoList[0];
-    const { segments } = textInfoObj;
     let audioInfoList = tracks.filter((item) => item.type == "audio");
-    audioInfoList.map((item, index) => {
-      console.log(item, "itemmmmmmmmmm");
-      const { material_id, target_timerange } = item.segments[0];
-      const { duration } = target_timerange;
-      segments[index].target_timerange.start = audioFirstStart;
-      segments[index].target_timerange.duration = duration;
-      item.segments[0].target_timerange.start = audioFirstStart;
-      audioFirstStart = normalSpace + duration;
+    let textInfoObj = textInfoList[0];
+    let { segments } = textInfoObj;
+    segments.map((textItem, textItemIndex) => {
+      console.log(2222);
+      const { material_id } = textItem;
+      let audioIndex = audios.findIndex((item) => item.text_id === material_id);
+      if (audioIndex != -1) {
+        console.log(11111);
+        let currentAudioObjId = audios[audioIndex].id;
+        audioInfoList.map((item, index) => {
+          let segmentsAudioIndex = item.segments.findIndex((item2) => item2.material_id == currentAudioObjId);
+          if (segmentsAudioIndex != -1) {
+            console.log(index, index);
+            segments[textItemIndex].target_timerange.start = audioFirstStart;
+            segments[textItemIndex].target_timerange.duration = item.segments[segmentsAudioIndex].target_timerange.duration;
+            item.segments[segmentsAudioIndex].target_timerange.start = audioFirstStart;
+            audioFirstStart = normalSpace + Number(item.segments[segmentsAudioIndex].target_timerange.duration) + audioFirstStart;
+            console.log(audioFirstStart, "audioFirstStartaudioFirstStart");
+          }
+        });
+      }
     });
-    console.log(segments, "segmentssegments");
+    let finallData = JSON.parse(JSON.stringify(currentFileItems));
     let data = JSON.stringify(currentFileItems);
+    mainWindow.webContents.send("finish", { startData, finallData });
     fs.writeFileSync(currentFile, data, "utf-8");
   }
   readPromise(normalPath).then((value) => {

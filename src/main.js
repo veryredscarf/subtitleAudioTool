@@ -58,19 +58,63 @@ const createWindow = () => {
     // 读取工程文件
     let currentFile = fullAddress + '/draft_content.json'
     const currentFileItems = JSON.parse(fs.readFileSync(currentFile, 'utf8'))
+    let startData = JSON.parse(JSON.stringify(currentFileItems)) // 最开始数据
     // console.log(currentFileItems, 'currentFileItems');
     // 首先默认将第一个音频的起始位置设置为0
     let audioFirstStart = 0
     // 设置每个视频的间距
-    let normalSpace = 20000 // 默认是10帧
+    let normalSpace = 2000 // 默认是10帧
     const { materials, tracks } = currentFileItems
+    let newSegments = [] // 新轨道信息
     // console.log(tracks);
     const { texts, audios } = materials
     // // 获取素材文本对象list
     let textInfoList = tracks.filter(item => item.type == 'text')  // 包含所有文本的时间，开始时间，但是只有一个对象
+    let audioInfoList = tracks.filter(item => item.type == 'audio')  // 包含所有的音频对象的信息  有多个
     let textInfoObj = textInfoList[0]
 
-    const { segments } = textInfoObj
+    let { segments } = textInfoObj
+    // 由于轨道上的字幕的顺序是正确的，所以我们需要根据字幕的顺序来匹配对应的字幕转音频文件的对象的信息，再通过音频对象的信息来调整自身字幕的长度
+    segments.map((textItem, textItemIndex) => {
+      console.log(2222);
+      const {  material_id } = textItem // 找到对应的文本对象id，再通过这条id对应所有的音频对象中找到对应的text_id，于是找出对应的音频对象，再通过音频对象id，再遍历所有的音频轨道，找到某条轨道上的音频material_id与之对应即可
+      let audioIndex = audios.findIndex(item => item.text_id === material_id)
+      if (audioIndex != -1) {
+        console.log(11111);
+        let currentAudioObjId = audios[audioIndex].id
+        let audiosegmentIndex = '' // 找到具体的音频轨道
+        let audiosegmentAudioIndex = '' // 找到具体音频轨道上的音频对象下标
+        // 通过音频id找到对应轨道上的音频对象
+        audioInfoList.map((item, index) => {
+          // const { material_id, target_timerange } = item.segments[0] // 获取音频对象的id,以及对应音频的长度和起始位置
+          // const { duration} = target_timerange // 获取音频的长度
+          let segmentsAudioIndex =  item.segments.findIndex(item => item.material_id == currentAudioObjId)
+          if (segmentsAudioIndex != -1) {
+            audiosegmentIndex = index
+            audiosegmentAudioIndex = segmentsAudioIndex
+            // console.log(textItem.target_timerange, 'textItem');
+            // console.log(item, 'itemitemitem');
+            // 根据这个值找到对应的音频对象
+            // const { target_timerange } = item.segments[segmentsAudioIndex]
+            // console.log(target_timerange, 'target_timerangetarget_timerange');
+            console.log(index, index);
+
+
+            segments[textItemIndex].target_timerange.start = audioFirstStart
+            segments[textItemIndex].target_timerange.duration = item.segments[segmentsAudioIndex].target_timerange.duration
+            item.segments[segmentsAudioIndex].target_timerange.start = audioFirstStart
+            audioFirstStart = normalSpace + Number(item.segments[segmentsAudioIndex].target_timerange.duration) + audioFirstStart
+            console.log(audioFirstStart, 'audioFirstStartaudioFirstStart');
+          }
+        })
+
+      }
+    })
+    
+
+
+
+
     // console.log(segments, 'segmentssegments');
     // // 此处获取到字幕对象的起始位置以及时长
     // segments.map(item => {
@@ -82,25 +126,17 @@ const createWindow = () => {
     //   segments[index].target_timerange.start = audioFirstStart
     // })
 
-    let audioInfoList = tracks.filter(item => item.type == 'audio')  // 包含所有的音频对象的信息  有多个
-    // console.log(textInfoList, 'textInfoList');
+    // currentFileItems.segments = 
+    // currentFileItems.
 
+    // 
+    // let tracksIndex = tracks.findIndex(item => item.type == 'audio')
+    // console.log(newSegments, 'newSegmentsnewSegments');
+    // tracks[tracksIndex].segments = newSegments
 
-
-    // 由于我的需求是根据音频的长度来动态调整文本的长度
-    // console.log(audioInfoList, 'audioInfoListaudioInfoList');
-    audioInfoList.map((item, index) => {
-      console.log(item, 'itemmmmmmmmmm');
-      const { material_id, target_timerange } = item.segments[0] // 获取音频对象的id,以及对应音频的长度和起始位置
-      const { duration} = target_timerange // 获取音频的长度
-      segments[index].target_timerange.start = audioFirstStart
-      segments[index].target_timerange.duration = duration
-      item.segments[0].target_timerange.start = audioFirstStart
-      audioFirstStart = normalSpace + duration
-    })
-    console.log(segments, 'segmentssegments');
-    // console.log(currentFileItems.tracks[3].segments[0], 'currentFileItems.tracks[2].segments[0]');
+    let finallData = JSON.parse(JSON.stringify(currentFileItems))
     let data = JSON.stringify(currentFileItems);
+    mainWindow.webContents.send('finish', {startData, finallData})
     fs.writeFileSync(currentFile, data, "utf-8");
   }
 
